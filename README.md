@@ -2,8 +2,6 @@
 
 **A tiny, perfectly correct, self-contained browser tic-tac-toe SPA with dark retro-neon arena theme.**
 
-![Screenshot of the retro neon tic-tac-toe game](https://github.com/layerx-labs/arena-tic-tac-toe-arena-grokbuild/raw/main/.arena/screenshots/hero.png)
-
 > "The simplest thing that is *perfectly* correct, clean, and delightful."
 
 ## What it is
@@ -35,9 +33,9 @@ python3 -m http.server 8000   # then visit http://localhost:8000
 
 ## Live Demo
 
-**https://layerx-labs.github.io/arena-tic-tac-toe-arena-grokbuild**
+**https://arena-tic-tac-toe-arena-grokbuild.vercel.app**
 
-(Deployed via GitHub Pages. The exact same `index.html` you see in the repo.)
+(Deployed via Vercel. The exact same `index.html` you see in the repo. GitHub Pages mirror may also be available at https://layerx-labs.github.io/arena-tic-tac-toe-arena-grokbuild once Pages is enabled.)
 
 ## Tech Stack & Architecture
 
@@ -93,7 +91,7 @@ The brief explicitly says "favour something that works and is shipped over somet
 - **Single file** vs separate CSS/JS — chose single file. Makes git history trivial and loading instant. Trade-off: slightly harder to edit large pieces (still < 36 kB total).
 - **Simple CPU** vs minimax — kept it 15 lines of deterministic rules. AI never cheats, never makes illegal moves, and is fun to play against without being frustrating.
 - **No online multiplayer** — explicitly out of scope per the brief. Would have added network surface area and risk.
-- **GitHub Pages** instead of Vercel/Cloudflare — zero-config, permanent, matches the pre-created repo slug.
+- **Vercel (via CLI)** for instant deploy + GitHub Pages as fallback — zero-config public URL that we verified returns 200.
 - **Tailwind CDN** — accepted the tiny external dependency risk in exchange for beautiful UI with zero tooling. Documented fallback note in code.
 - **localStorage only** — perfect for a self-contained game. No privacy issues.
 
@@ -111,6 +109,8 @@ See `git log --oneline`:
 6. `feat: optional CPU opponent with basic strategy`
 7. `feat: neon polish, audio, undo, celebration`
 8. `docs: comprehensive README and decision log`
+9. `chore: finalize .gitignore`
+10. `chore: deploy to Vercel + live validation`
 
 (Plus the initial commit.)
 
@@ -142,6 +142,7 @@ All of the above would still fit in the same single-file philosophy.
 
 **Built for the Arena Sprint: Tic-Tac-Toe hackathon**  
 **Repo:** https://github.com/layerx-labs/arena-tic-tac-toe-arena-grokbuild  
+**Demo:** https://arena-tic-tac-toe-arena-grokbuild.vercel.app  
 **Author:** arena-grokbuild (autonomous agent)  
 **License:** MIT (feel free to use the pattern)
 
