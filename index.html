@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arena Tic-Tac-Toe: Retro Neon Edition</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    
+    :root {
+      --neon-cyan: #22d3ee;
+      --neon-magenta: #e879f9;
+      --arena-bg: #0a0a0f;
+    }
+    
+    body {
+      font-family: 'Press Start 2P', system-ui, -apple-system, sans-serif;
+    }
+    
+    .neon-title {
+      text-shadow: 
+        0 0 5px var(--neon-cyan),
+        0 0 10px var(--neon-cyan),
+        0 0 20px var(--neon-cyan),
+        0 0 40px var(--neon-cyan);
+      letter-spacing: 4px;
+    }
+    
+    .neon-cyan {
+      color: var(--neon-cyan);
+      text-shadow: 0 0 5px var(--neon-cyan), 0 0 10px var(--neon-cyan);
+    }
+    
+    .neon-magenta {
+      color: var(--neon-magenta);
+      text-shadow: 0 0 5px var(--neon-magenta), 0 0 10px var(--neon-magenta);
+    }
+    
+    .arena-grid {
+      background: linear-gradient(#111113, #0a0a0f);
+      box-shadow: 
+        0 0 20px rgba(34, 211, 238, 0.3),
+        inset 0 0 60px rgba(0,0,0,0.8);
+      border: 4px solid #22d3ee;
+      border-image: linear-gradient(to bottom, #22d3ee, #e879f9) 1;
+    }
+    
+    .game-cell {
+      background-color: #111113;
+      border: 3px solid #334155;
+      transition: all 0.1s cubic-bezier(0.23, 1, 0.32, 1);
+      position: relative;
+      font-size: 3.5rem;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.6);
+    }
+    
+    .game-cell:hover:not(.filled):not(.game-over) {
+      background-color: #1e2937;
+      border-color: #22d3ee;
+      box-shadow: 0 0 15px rgba(34, 211, 238, 0.5), inset 0 0 10px rgba(0,0,0,0.6);
+    }
+    
+    .game-cell.filled {
+      cursor: default;
+    }
+    
+    .game-cell.x {
+      color: #22d3ee;
+      text-shadow: 0 0 10px #22d3ee, 0 0 20px #22d3ee;
+    }
+    
+    .game-cell.o {
+      color: #e879f9;
+      text-shadow: 0 0 10px #e879f9, 0 0 20px #e879f9;
+    }
+    
+    .game-cell.game-over {
+      opacity: 0.85;
+    }
+    
+    .winning-line {
+      position: absolute;
+      background: linear-gradient(to right, #22d3ee, #e879f9, #22d3ee);
+      box-shadow: 0 0 25px #22d3ee, 0 0 50px #e879f9;
+      z-index: 10;
+      transition: all 0.4s ease-out;
+      border-radius: 9999px;
+    }
+    
+    .status-banner {
+      font-family: 'Press Start 2P', system-ui, -apple-system, sans-serif;
+      letter-spacing: 2px;
+    }
+    
+    .retro-btn {
+      transition: all 0.1s ease;
+      box-shadow: 0 0 10px rgba(34, 211, 238, 0.3);
+      border: 2px solid #22d3ee;
+    }
+    
+    .retro-btn:hover {
+      box-shadow: 0 0 20px rgba(34, 211, 238, 0.6);
+      transform: translateY(-1px);
+    }
+    
+    .retro-btn:active {
+      transform: translateY(1px);
+    }
+    
+    .score-box {
+      background: #111113;
+      border: 2px solid #475569;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+    }
+    
+    .move-history {
+      font-size: 0.7rem;
+      line-height: 1.3;
+      scrollbar-width: thin;
+    }
+    
+    .move-item {
+      transition: all 0.1s ease;
+    }
+    
+    .move-item:hover {
+      background-color: #1e2937;
+      color: #22d3ee;
+    }
+    
+    .neon-glow {
+      box-shadow: 0 0 8px currentColor, 0 0 16px currentColor;
+    }
+    
+    .arena-cabinet {
+      box-shadow: 
+        0 25px 50px -12px rgb(0 0 0 / 0.5),
+        0 0 0 12px #1e2937,
+        0 0 0 16px #334155;
+    }
+    
+    .cell-content {
+      transform: scale(0.9);
+      transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    
+    .game-cell.filled .cell-content {
+      transform: scale(1);
+    }
+  </style>
+</head>
+<body class="bg-[#0a0a0f] text-slate-200 min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-5xl">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <div class="flex items-center justify-center gap-x-3 mb-2">
+        <i class="fa-solid fa-gamepad text-4xl neon-cyan"></i>
+        <h1 class="text-5xl md:text-6xl font-black tracking-[6px] neon-title">
+          ARENA
+        </h1>
+        <i class="fa-solid fa-gamepad text-4xl neon-magenta"></i>
+      </div>
+      <p class="text-xl text-slate-400 tracking-[4px] -mt-1">TIC-TAC-TOE</p>
+      <p class="text-sm mt-1 text-cyan-400/70">RETRO NEON EDITION • 1982</p>
+    </div>
+
+    <div class="flex flex-col lg:flex-row gap-8 items-start justify-center">
+      <!-- Main Game Cabinet -->
+      <div class="flex-1 max-w-[420px] w-full mx-auto">
+        <div class="arena-cabinet bg-[#111113] p-6 rounded-2xl border-2 border-slate-700">
+          
+          <!-- Status + Controls -->
+          <div class="flex items-center justify-between mb-4 px-1">
+            <div id="status" 
+                 class="status-banner px-4 py-2 bg-slate-900 border-2 border-slate-700 rounded text-sm font-bold tracking-widest neon-cyan flex-1 text-center">
+              X'S TURN
+            </div>
+            
+            <div class="flex gap-2 ml-3">
+              <!-- CPU Toggle -->
+              <button id="ai-toggle"
+                      class="retro-btn flex items-center gap-2 px-3 py-2 text-xs bg-slate-900 hover:bg-slate-800 border-2 border-slate-600 rounded text-slate-300 font-bold active:bg-slate-950"
+                      onclick="toggleAI()">
+                <i class="fa-solid fa-robot"></i>
+                <span id="ai-label" class="hidden sm:inline">VS CPU</span>
+              </button>
+              
+              <!-- Mute -->
+              <button id="mute-btn"
+                      onclick="toggleMute()"
+                      class="retro-btn px-3 py-2 bg-slate-900 hover:bg-slate-800 border-2 border-slate-600 text-xs rounded text-slate-300"
+                      title="Toggle sound">
+                <i id="mute-icon" class="fa-solid fa-volume-up"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- The 3x3 Arena Grid -->
+          <div id="board" 
+               class="arena-grid grid grid-cols-3 gap-2 p-4 rounded-xl aspect-square max-w-[380px] mx-auto"
+               role="grid"
+               aria-label="Tic Tac Toe board">
+            <!-- 9 cells populated by JS -->
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex gap-3 mt-5">
+            <button onclick="resetGame()" 
+                    class="retro-btn flex-1 py-3 px-4 bg-slate-900 hover:bg-slate-800 text-sm font-bold tracking-widest border-2 border-cyan-400/70 rounded flex items-center justify-center gap-2 active:bg-black">
+              <i class="fa-solid fa-redo"></i>
+              <span>NEW GAME</span>
+            </button>
+            
+            <button onclick="undoMove()" 
+                    id="undo-btn"
+                    class="retro-btn py-3 px-5 bg-slate-900 hover:bg-slate-800 text-sm font-bold tracking-widest border-2 border-slate-600 rounded flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                    disabled>
+              <i class="fa-solid fa-undo"></i>
+              <span>UNDO</span>
+            </button>
+          </div>
+        </div>
+        
+        <p class="text-center text-[10px] text-slate-600 mt-3 tracking-widest">LOCAL TWO-PLAYER • KEYBOARD SUPPORT • PERSISTED SCORES</p>
+      </div>
+
+      <!-- Side Panel: Scores + History -->
+      <div class="w-full lg:w-80 space-y-6">
+        
+        <!-- Scoreboard -->
+        <div class="score-box p-4 rounded-xl">
+          <div class="text-xs text-slate-400 tracking-[2px] mb-3 px-1 flex items-center gap-2">
+            <i class="fa-solid fa-tachometer-alt"></i>
+            <span>ARCADE SCOREBOARD</span>
+          </div>
+          
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <!-- X Score -->
+            <div>
+              <div class="text-xs text-cyan-400 mb-1">PLAYER X</div>
+              <div id="score-x" class="text-4xl font-black neon-cyan tracking-tighter">0</div>
+              <div class="text-[10px] text-slate-500 -mt-1">WINS</div>
+            </div>
+            
+            <!-- Draws -->
+            <div>
+              <div class="text-xs text-slate-400 mb-1">DRAWS</div>
+              <div id="score-draw" class="text-4xl font-black text-slate-300 tracking-tighter">0</div>
+              <div class="text-[10px] text-slate-500 -mt-1">TIES</div>
+            </div>
+            
+            <!-- O Score -->
+            <div>
+              <div class="text-xs text-fuchsia-400 mb-1">PLAYER O</div>
+              <div id="score-o" class="text-4xl font-black neon-magenta tracking-tighter">0</div>
+              <div class="text-[10px] text-slate-500 -mt-1">WINS</div>
+            </div>
+          </div>
+          
+          <div class="mt-2 pt-2 border-t border-slate-800 text-center">
+            <div class="text-xs text-amber-300 mb-0.5">STREAK</div>
+            <div id="streak" class="text-2xl font-black text-amber-400">—</div>
+          </div>
+        </div>
+
+        <!-- Move History -->
+        <div class="score-box p-4 rounded-xl flex-1">
+          <div class="flex justify-between items-center mb-2 px-1">
+            <div class="text-xs text-slate-400 tracking-[2px]">MOVE HISTORY</div>
+            <div id="history-count" class="text-xs px-2 py-0.5 bg-slate-900 border border-slate-700 rounded text-slate-500">0</div>
+          </div>
+          
+          <div id="history-list" 
+               class="move-history bg-[#0a0a0f] border border-slate-800 rounded p-2 h-[138px] overflow-y-auto text-slate-400 font-mono">
+            <!-- Populated dynamically by JS -->
+            <div class="text-center text-slate-600 italic py-6 text-xs">No moves yet</div>
+          </div>
+          <div class="text-center mt-1">
+            <button onclick="undoMove()" 
+                    class="text-[10px] px-2 py-1 text-slate-400 hover:text-cyan-400 active:text-cyan-500">
+              <i class="fa-solid fa-undo mr-1"></i>CLICK MOVE TO UNDO
+            </button>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <!-- Keyboard hints footer -->
+    <div class="mt-8 text-center text-xs text-slate-600 max-w-md mx-auto">
+      <span class="hidden md:inline">KEYBOARD: </span>
+      <kbd class="px-1.5 py-px bg-slate-900 border border-slate-700 rounded text-[10px]">1-9</kbd> 
+      (numpad) or 
+      <kbd class="px-1.5 py-px bg-slate-900 border border-slate-700 rounded text-[10px]">ARROWS</kbd> + 
+      <kbd class="px-1.5 py-px bg-slate-900 border border-slate-700 rounded text-[10px]">ENTER</kbd>
+      &nbsp;•&nbsp; 
+      <span class="hidden md:inline">R = New game • U = Undo • M = Mute</span>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // ARENA TIC-TAC-TOE: RETRO NEON EDITION
+    // Single-file vanilla JS + Tailwind CDN
+    // All state in-memory + localStorage
+    // ============================================
+    
+    // Tailwind script configuration (neon palette)
+    function initTailwind() {
+      document.documentElement.style.setProperty('--neon-cyan', '#22d3ee');
+      document.documentElement.style.setProperty('--neon-magenta', '#e879f9');
+    }
+    
+    // Game state
+    let board = Array(9).fill('');
+    let currentPlayer = 'X';
+    let gameOver = false;
+    let history = [];
+    let isAIEnabled = false;
+    let isMuted = false;
+    let scores = { x: 0, o: 0, draw: 0 };
+    let currentStreak = null; // 'X' | 'O' | 'draw' | null
+    
+    // Audio context (lazy init)
+    let audioCtx = null;
+    
+    function getAudioContext() {
+      if (!audioCtx) {
+        try {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        } catch(e) {}
+      }
+      return audioCtx;
+    }
+    
+    function playBeep(type = 'place') {
+      if (isMuted) return;
+      const ctx = getAudioContext();
+      if (!ctx) return;
+      
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+      
+      oscillator.type = (type === 'win') ? 'sawtooth' : 'square';
+      
+      if (type === 'place') {
+        oscillator.frequency.value = 420;
+        gain.gain.value = 0.25;
+        filter.type = 'lowpass';
+        filter.frequency.value = 900;
+      } else if (type === 'win') {
+        oscillator.frequency.value = 680;
+        gain.gain.value = 0.45;
+        filter.type = 'bandpass';
+        filter.frequency.value = 1200;
+        oscillator.type = 'triangle';
+      } else if (type === 'draw') {
+        oscillator.frequency.value = 180;
+        gain.gain.value = 0.3;
+      } else if (type === 'undo') {
+        oscillator.frequency.value = 240;
+        gain.gain.value = 0.2;
+      }
+      
+      const now = ctx.currentTime;
+      gain.gain.value = gain.gain.value * 0.9;
+      
+      oscillator.connect(filter);
+      filter.connect(gain);
+      gain.connect(ctx.destination);
+      
+      oscillator.start(now);
+      
+      // Envelope
+      if (type === 'win') {
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+        oscillator.stop(now + 0.7);
+      } else {
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+        oscillator.stop(now + 0.22);
+      }
+    }
+    
+    // Winning combinations (8 lines)
+    const WIN_LINES = [
+      [0,1,2], [3,4,5], [6,7,8],   // rows
+      [0,3,6], [1,4,7], [2,5,8],   // cols
+      [0,4,8], [2,4,6]             // diags
+    ];
+    
+    function checkWinner(b) {
+      for (const line of WIN_LINES) {
+        const [a, c, d] = line;
+        if (b[a] && b[a] === b[c] && b[a] === b[d]) {
+          return { winner: b[a], line: line };
+        }
+      }
+      return null;
+    }
+    
+    function isDraw(b) {
+      return b.every(cell => cell !== '') && !checkWinner(b);
+    }
+    
+    function saveState() {
+      try {
+        localStorage.setItem('arena-ttt-scores', JSON.stringify(scores));
+        localStorage.setItem('arena-ttt-streak', JSON.stringify(currentStreak));
+      } catch (e) {}
+    }
+    
+    function loadState() {
+      try {
+        const savedScores = localStorage.getItem('arena-ttt-scores');
+        if (savedScores) scores = JSON.parse(savedScores);
+        
+        const savedStreak = localStorage.getItem('arena-ttt-streak');
+        if (savedStreak) currentStreak = JSON.parse(savedStreak);
+      } catch (e) {}
+      
+      updateScoresUI();
+    }
+    
+    function updateScoresUI() {
+      const xEl = document.getElementById('score-x');
+      const oEl = document.getElementById('score-o');
+      const dEl = document.getElementById('score-draw');
+      const streakEl = document.getElementById('streak');
+      
+      if (xEl) xEl.textContent = scores.x || 0;
+      if (oEl) oEl.textContent = scores.o || 0;
+      if (dEl) dEl.textContent = scores.draw || 0;
+      
+      if (streakEl) {
+        if (!currentStreak || currentStreak === 'draw') {
+          streakEl.textContent = '—';
+          streakEl.className = 'text-2xl font-black text-amber-400';
+        } else {
+          streakEl.textContent = currentStreak + '×' + (currentStreak === 'X' ? '2' : '1'); // simple display
+          streakEl.className = currentStreak === 'X' 
+            ? 'text-2xl font-black neon-cyan' 
+            : 'text-2xl font-black neon-magenta';
+        }
+      }
+    }
+    
+    function updateStreak(winner) {
+      if (winner === 'X' || winner === 'O') {
+        if (currentStreak === winner) {
+          // streak continues — no numeric multiplier tracked beyond display
+        } else {
+          currentStreak = winner;
+        }
+      } else {
+        currentStreak = 'draw';
+      }
+      saveState();
+      updateScoresUI();
+    }
+    
+    function updateScore(winner) {
+      if (winner === 'X') scores.x++;
+      else if (winner === 'O') scores.o++;
+      else scores.draw++;
+      
+      updateStreak(winner);
+      saveState();
+      updateScoresUI();
+    }
+    
+    // Render the board from state
+    function render() {
+      const boardEl = document.getElementById('board');
+      if (!boardEl) return;
+      
+      boardEl.innerHTML = '';
+      
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.className = `game-cell rounded-lg aspect-square text-center select-none`;
+        cell.dataset.index = i;
+        cell.setAttribute('role', 'gridcell');
+        cell.setAttribute('aria-label', `Cell ${i + 1}`);
+        
+        // Add content wrapper for animation
+        const content = document.createElement('div');
+        content.className = 'cell-content';
+        content.style.fontFamily = "'Press Start 2P', monospace";
+        
+        if (board[i]) {
+          cell.classList.add('filled', board[i].toLowerCase());
+          content.textContent = board[i];
+          content.style.fontSize = '3.25rem';
+          content.style.lineHeight = '1';
+        } else if (!gameOver) {
+          cell.onclick = () => makeMove(i);
+          cell.onkeydown = handleCellKey;
+        }
+        
+        if (gameOver) {
+          cell.classList.add('game-over');
+          cell.style.cursor = 'default';
+        }
+        
+        cell.appendChild(content);
+        boardEl.appendChild(cell);
+      }
+      
+      // Re-apply any winning line overlay
+      renderWinningLine();
+      
+      // Update status banner
+      updateStatus();
+      
+      // Update undo button state
+      const undoBtn = document.getElementById('undo-btn');
+      if (undoBtn) {
+        undoBtn.disabled = history.length === 0 || gameOver;
+      }
+      
+      // Update history list
+      renderHistory();
+    }
+    
+    let winningLineEl = null;
+    
+    function renderWinningLine() {
+      const boardEl = document.getElementById('board');
+      if (!boardEl) return;
+      
+      // Remove any previous line
+      if (winningLineEl && winningLineEl.parentNode) {
+        winningLineEl.parentNode.removeChild(winningLineEl);
+      }
+      winningLineEl = null;
+      
+      if (!gameOver) return;
+      
+      const winnerInfo = checkWinner(board);
+      if (!winnerInfo) return;
+      
+      const line = winnerInfo.line;
+      const [start, , end] = line;
+      
+      const startCell = boardEl.children[start];
+      const endCell = boardEl.children[end];
+      if (!startCell || !endCell) return;
+      
+      // Compute line geometry
+      const boardRect = boardEl.getBoundingClientRect();
+      const startRect = startCell.getBoundingClientRect();
+      const endRect = endCell.getBoundingClientRect();
+      
+      const lineEl = document.createElement('div');
+      lineEl.className = 'winning-line';
+      
+      const isHorizontal = (line[0] % 3) === (line[1] % 3);
+      const isVertical = Math.floor(line[0] / 3) === Math.floor(line[1] / 3);
+      
+      const thickness = 10;
+      
+      if (isHorizontal) {
+        // horizontal line
+        const y = (startRect.top + startRect.height / 2) - boardRect.top;
+        lineEl.style.left = '12px';
+        lineEl.style.top = `${y - thickness/2}px`;
+        lineEl.style.width = `calc(100% - 24px)`;
+        lineEl.style.height = `${thickness}px`;
+      } else if (isVertical) {
+        const x = (startRect.left + startRect.width / 2) - boardRect.left;
+        lineEl.style.top = '12px';
+        lineEl.style.left = `${x - thickness/2}px`;
+        lineEl.style.height = `calc(100% - 24px)`;
+        lineEl.style.width = `${thickness}px`;
+      } else {
+        // diagonal
+        const isMainDiag = line[0] === 0;
+        
+        lineEl.style.height = '8px';
+        lineEl.style.width = 'calc(100% - 20px)';
+        lineEl.style.left = '10px';
+        
+        if (isMainDiag) {
+          lineEl.style.top = '50%';
+          lineEl.style.transform = 'translateY(-50%) rotate(-45deg)';
+        } else {
+          // anti-diagonal
+          lineEl.style.top = '50%';
+          lineEl.style.transform = 'translateY(-50%) rotate(45deg)';
+        }
+      }
+      
+      boardEl.style.position = 'relative';
+      boardEl.appendChild(lineEl);
+      winningLineEl = lineEl;
+      
+      // trigger glow animation
+      setTimeout(() => {
+        if (lineEl) lineEl.style.opacity = '0.95';
+      }, 50);
+    }
+    
+    function updateStatus() {
+      const statusEl = document.getElementById('status');
+      if (!statusEl) return;
+      
+      statusEl.classList.remove('neon-cyan', 'neon-magenta', 'text-amber-400', 'text-emerald-400');
+      
+      if (gameOver) {
+        const winnerInfo = checkWinner(board);
+        
+        if (winnerInfo) {
+          statusEl.textContent = `${winnerInfo.winner} WINS!`;
+          statusEl.classList.add(winnerInfo.winner === 'X' ? 'neon-cyan' : 'neon-magenta');
+        } else {
+          statusEl.textContent = "CAT'S GAME — DRAW";
+          statusEl.classList.add('text-amber-400');
+        }
+      } else {
+        statusEl.textContent = `${currentPlayer}'S TURN`;
+        statusEl.classList.add(currentPlayer === 'X' ? 'neon-cyan' : 'neon-magenta');
+      }
+    }
+    
+    function renderHistory() {
+      const listEl = document.getElementById('history-list');
+      const countEl = document.getElementById('history-count');
+      if (!listEl || !countEl) return;
+      
+      countEl.textContent = history.length;
+      
+      if (history.length === 0) {
+        listEl.innerHTML = '<div class="text-center text-slate-600 italic py-6 text-xs">No moves yet</div>';
+        return;
+      }
+      
+      listEl.innerHTML = '';
+      
+      // Render each move (history[0] is initial empty, so skip it or show properly)
+      history.forEach((histEntry, idx) => {
+        if (idx === 0) return; // skip initial empty state
+        
+        const moveNum = idx;
+        const lastPlayer = (idx % 2 === 1) ? 'X' : 'O';
+        const moveIndex = histEntry.lastMoveIndex;
+        
+        const row = document.createElement('div');
+        row.className = `move-item flex items-center justify-between gap-2 px-2 py-[3px] rounded cursor-pointer text-xs border border-transparent hover:border-slate-600`;
+        row.innerHTML = `
+          <span class="font-mono text-slate-400">#${moveNum}</span>
+          <span class="${lastPlayer === 'X' ? 'neon-cyan' : 'neon-magenta'} font-black">${lastPlayer}</span>
+          <span class="font-mono text-slate-500">@${moveIndex}</span>
+        `;
+        
+        // Clicking a history entry undoes to that state
+        row.onclick = () => {
+          undoToMove(idx);
+        };
+        
+        listEl.appendChild(row);
+      });
+    }
+    
+    function updateHistory(newBoard, moveIndex) {
+      // Store snapshot + metadata for undo
+      history.push({
+        board: [...newBoard],
+        lastMoveIndex: moveIndex,
+        player: currentPlayer === 'X' ? 'O' : 'X'  // the player who just played
+      });
+    }
+    
+    function undoToMove(targetHistoryIndex) {
+      if (gameOver) return;
+      if (targetHistoryIndex < 1 || targetHistoryIndex >= history.length) return;
+      
+      const targetState = history[targetHistoryIndex];
+      
+      // Truncate history to target
+      history = history.slice(0, targetHistoryIndex + 1);
+      
+      board = [...targetState.board];
+      currentPlayer = (targetHistoryIndex % 2 === 1) ? 'O' : 'X';
+      gameOver = false;
+      
+      playBeep('undo');
+      
+      render();
+    }
+    
+    // Core move handler
+    function makeMove(index) {
+      if (gameOver || board[index] !== '') return;
+      
+      // Save previous state for undo
+      const prevBoard = [...board];
+      const prevPlayer = currentPlayer;
+      
+      // Apply move
+      board[index] = currentPlayer;
+      updateHistory(prevBoard, index);   // store the move that was just made
+      
+      playBeep('place');
+      
+      // Check terminal state
+      const winnerInfo = checkWinner(board);
+      
+      if (winnerInfo) {
+        gameOver = true;
+        updateScore(winnerInfo.winner);
+        playBeep('win');
+        // small celebration
+        triggerWinFlash(winnerInfo.winner);
+      } else if (isDraw(board)) {
+        gameOver = true;
+        updateScore(null);
+        playBeep('draw');
+      } else {
+        // Switch player
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        
+        // If AI enabled and it's now AI's turn, schedule CPU move
+        if (isAIEnabled && currentPlayer === 'O' && !gameOver) {
+          setTimeout(() => {
+            if (!gameOver && isAIEnabled) {
+              makeCPUMove();
+            }
+          }, 420);
+        }
+      }
+      
+      render();
+    }
+    
+    function triggerWinFlash(winner) {
+      const boardEl = document.getElementById('board');
+      if (!boardEl) return;
+      
+      boardEl.classList.add('scale-[1.015]');
+      setTimeout(() => {
+        if (boardEl) boardEl.classList.remove('scale-[1.015]');
+      }, 240);
+      
+      // Bonus: simple confetti using DOM (no canvas needed)
+      createMiniConfetti(winner);
+    }
+    
+    function createMiniConfetti(winner) {
+      const container = document.getElementById('board');
+      if (!container) return;
+      
+      const colors = winner === 'X' ? ['#22d3ee', '#67e8f9'] : ['#e879f9', '#f0abfc'];
+      
+      for (let i = 0; i < 16; i++) {
+        const particle = document.createElement('div');
+        particle.style.position = 'absolute';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = '-10%';
+        particle.style.width = '6px';
+        particle.style.height = '6px';
+        particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+        particle.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+        particle.style.zIndex = '30';
+        particle.style.pointerEvents = 'none';
+        particle.style.opacity = Math.random() * 0.6 + 0.6;
+        
+        container.appendChild(particle);
+        
+        const duration = Math.random() * 650 + 580;
+        const xDrift = (Math.random() - 0.5) * 70;
+        
+        particle.animate([
+          { 
+            transform: `translateY(0) translateX(0)`,
+            opacity: particle.style.opacity
+          },
+          { 
+            transform: `translateY(${container.offsetHeight + 30}px) translateX(${xDrift}px)`,
+            opacity: 0
+          }
+        ], {
+          duration: duration,
+          easing: 'cubic-bezier(0.23,1,0.32,1)'
+        }).onfinish = () => {
+          if (particle.parentNode) particle.parentNode.removeChild(particle);
+        };
+      }
+    }
+    
+    // Very simple but correct CPU AI (win > block > random)
+    function getCPUMove() {
+      const empty = [];
+      for (let i = 0; i < 9; i++) {
+        if (board[i] === '') empty.push(i);
+      }
+      if (empty.length === 0) return null;
+      
+      // 1) Can AI win immediately?
+      for (const idx of empty) {
+        const testBoard = [...board];
+        testBoard[idx] = 'O';
+        if (checkWinner(testBoard)) return idx;
+      }
+      
+      // 2) Block human (X) from winning?
+      for (const idx of empty) {
+        const testBoard = [...board];
+        testBoard[idx] = 'X';
+        if (checkWinner(testBoard)) return idx;
+      }
+      
+      // 3) Take center if available
+      if (board[4] === '') return 4;
+      
+      // 4) Take a corner
+      const corners = [0, 2, 6, 8];
+      const availableCorners = corners.filter(i => board[i] === '');
+      if (availableCorners.length > 0) {
+        return availableCorners[Math.floor(Math.random() * availableCorners.length)];
+      }
+      
+      // 5) Random legal
+      return empty[Math.floor(Math.random() * empty.length)];
+    }
+    
+    function makeCPUMove() {
+      if (gameOver || currentPlayer !== 'O' || !isAIEnabled) return;
+      
+      const move = getCPUMove();
+      if (move === null || board[move] !== '') return;
+      
+      // Use the same makeMove path (it will handle switching back)
+      makeMove(move);
+    }
+    
+    function toggleAI() {
+      isAIEnabled = !isAIEnabled;
+      
+      const btn = document.getElementById('ai-toggle');
+      const label = document.getElementById('ai-label');
+      
+      if (isAIEnabled) {
+        btn.classList.add('!border-fuchsia-400', '!text-fuchsia-300', 'bg-slate-950');
+        btn.classList.remove('border-slate-600');
+        if (label) label.textContent = 'CPU ON';
+        
+        // If it's O's turn right now, trigger AI move
+        if (currentPlayer === 'O' && !gameOver) {
+          setTimeout(makeCPUMove, 300);
+        }
+      } else {
+        btn.classList.remove('!border-fuchsia-400', '!text-fuchsia-300', 'bg-slate-950');
+        btn.classList.add('border-slate-600');
+        if (label) label.textContent = 'VS CPU';
+      }
+    }
+    
+    function toggleMute() {
+      isMuted = !isMuted;
+      const icon = document.getElementById('mute-icon');
+      
+      if (isMuted) {
+        icon.classList.remove('fa-volume-up');
+        icon.classList.add('fa-volume-mute');
+      } else {
+        icon.classList.remove('fa-volume-mute');
+        icon.classList.add('fa-volume-up');
+      }
+    }
+    
+    // Undo last move (history based)
+    function undoMove() {
+      if (history.length <= 1 || gameOver) return;
+      
+      // Pop last entry
+      history.pop();
+      
+      if (history.length === 0) {
+        resetBoardState();
+        return;
+      }
+      
+      const prevState = history[history.length - 1];
+      board = [...prevState.board];
+      
+      // Determine whose turn it is
+      currentPlayer = (history.length % 2 === 1) ? 'O' : 'X';
+      gameOver = false;
+      
+      playBeep('undo');
+      render();
+    }
+    
+    function undoToInitial() {
+      history = [];
+      resetBoardState();
+      render();
+    }
+    
+    function resetBoardState() {
+      board = Array(9).fill('');
+      currentPlayer = 'X';
+      gameOver = false;
+      history = [{
+        board: [...board],
+        lastMoveIndex: null,
+        player: null
+      }];
+    }
+    
+    function resetGame(keepScores = true) {
+      resetBoardState();
+      
+      // Clear any winning line overlay
+      const boardEl = document.getElementById('board');
+      if (boardEl && winningLineEl && winningLineEl.parentNode) {
+        winningLineEl.parentNode.removeChild(winningLineEl);
+      }
+      winningLineEl = null;
+      
+      // Keep scores and streak
+      render();
+      
+      // If AI on and we want CPU to start when X but no: we always let human start
+      if (isAIEnabled && currentPlayer === 'O') {
+        // Should not happen on reset
+      }
+    }
+    
+    function initBoard() {
+      const boardEl = document.getElementById('board');
+      if (!boardEl) return;
+      
+      // Initial empty state in history
+      history = [{
+        board: [...board],
+        lastMoveIndex: null,
+        player: null
+      }];
+      
+      // Create the 9 cells (initial render will do most work)
+      render();
+      
+      // Keyboard support for entire document (global shortcuts)
+      document.addEventListener('keydown', handleGlobalKeys);
+      
+      // Keyboard focus on cells (arrow navigation)
+      boardEl.addEventListener('keydown', handleBoardKeyboard);
+      
+      // Make board focusable for a11y
+      boardEl.setAttribute('tabindex', '0');
+    }
+    
+    function handleGlobalKeys(e) {
+      if (e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        resetGame();
+      }
+      if (e.key.toLowerCase() === 'u') {
+        e.preventDefault();
+        undoMove();
+      }
+      if (e.key.toLowerCase() === 'm') {
+        e.preventDefault();
+        toggleMute();
+      }
+      if (e.key === '/' && document.activeElement.id !== 'board') {
+        e.preventDefault();
+        const boardEl = document.getElementById('board');
+        if (boardEl) boardEl.focus();
+      }
+    }
+    
+    // Numpad + arrow navigation for cells
+    let focusedCell = 4; // center by default
+    
+    function handleBoardKeyboard(e) {
+      if (gameOver) return;
+      
+      const key = e.key;
+      let idx = focusedCell;
+      
+      if (['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(key)) {
+        e.preventDefault();
+        
+        const row = Math.floor(idx / 3);
+        const col = idx % 3;
+        
+        if (key === 'ArrowRight') idx = row * 3 + Math.min(2, col + 1);
+        if (key === 'ArrowLeft')  idx = row * 3 + Math.max(0, col - 1);
+        if (key === 'ArrowDown')  idx = Math.min(8, idx + 3);
+        if (key === 'ArrowUp')    idx = Math.max(0, idx - 3);
+        
+        focusedCell = idx;
+        focusCell(idx);
+      } 
+      else if (key === 'Enter' || key === ' ') {
+        e.preventDefault();
+        const cell = document.querySelector(`[data-index="${idx}"]`);
+        if (cell && !cell.classList.contains('filled') && !gameOver) {
+          makeMove(idx);
+        }
+      } 
+      else if (key >= '1' && key <= '9') {
+        // Numpad or top row numbers map directly to 0-8
+        // Treat '1' as bottom-left (classic numpad layout) but for simplicity map 1->0 ... 9->8
+        const num = parseInt(key, 10) - 1;
+        focusedCell = num;
+        const cell = document.querySelector(`[data-index="${num}"]`);
+        if (cell && !cell.classList.contains('filled') && !gameOver) {
+          makeMove(num);
+        } else {
+          focusCell(num);
+        }
+      }
+    }
+    
+    function focusCell(index) {
+      const boardEl = document.getElementById('board');
+      if (!boardEl) return;
+      
+      // Remove any previous visual focus indicator
+      Array.from(boardEl.children).forEach(c => c.classList.remove('!border-cyan-400', 'ring-1', 'ring-cyan-400/60'));
+      
+      const target = boardEl.children[index];
+      if (target) {
+        target.classList.add('!border-cyan-400', 'ring-1', 'ring-cyan-400/60');
+        target.focus();
+        
+        // remove ring after short delay unless playing
+        setTimeout(() => {
+          if (target && !target.classList.contains('filled')) {
+            target.classList.remove('ring-1', 'ring-cyan-400/60');
+          }
+        }, 1200);
+      }
+    }
+    
+    function handleCellKey(e) {
+      // this is attached inline on cell creation — handled by board listener mostly
+    }
+    
+    function initKeyboardFocus() {
+      // Initial hint: focus the center cell after first render
+      setTimeout(() => {
+        const center = document.querySelector('[data-index="4"]');
+        if (center) {
+          center.setAttribute('tabindex', '0');
+          focusedCell = 4;
+        }
+      }, 80);
+    }
+    
+    function initGame() {
+      initTailwind();
+      loadState();
+      
+      // Start with fresh board
+      resetBoardState();
+      
+      initBoard();
+      initKeyboardFocus();
+      
+      // Boot message
+      const status = document.getElementById('status');
+      if (status) {
+        // already correct
+      }
+      
+      // Optional auto-focus for keyboard players
+      const boardEl = document.getElementById('board');
+      if (boardEl) {
+        // Uncomment if you want auto focus: boardEl.focus();
+      }
+      
+      console.log('%c[Arena Tic-Tac-Toe] Retro Neon Edition ready. All systems nominal.', 'color:#64748b');
+    }
+    
+    // Boot
+    window.onload = initGame;
+    
+    // Expose a couple helpers for debugging in console if needed (dev only)
+    window.ARENA_TTT = { resetGame, toggleAI, getState: () => ({board, currentPlayer, gameOver}) };
+  </script>
+</body>
+</html>
