@@ -1,0 +1,5 @@
+# Arena workspace artifacts (not part of the shipped game)
+.arena/
+PLAN.md
+.DS_Store
+*.log
